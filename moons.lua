@@ -5,6 +5,7 @@
 -- encoder 2: vol
 -- key 2: toggle rec
 -- key 3: toggle (un)mute
+-- key 1 + key 3: clear all buffers
 
 engine.name = nil
 
@@ -15,6 +16,7 @@ local current_track = 1
 local rec_mode = 1 -- 1: IMMEDIATE, 2: LISTEN
 local rec_modes = { "IMMEDIATE", "LISTEN" }
 local input_threshold = 0.02
+local k1_held = false
 
 function init()
 	audio.level_adc_cut(1)
@@ -107,10 +109,45 @@ function enc(n, d)
 	redraw()
 end
 
+function clear_all_buffers()
+	for i = 1, VOICES do
+		local t = tracks[i]
+		-- stop recording and playback
+		sc.play(i, 0)
+		sc.rec(i, 0)
+		sc.loop(i, 0)
+		-- reset track state
+		t.recording = false
+		t.waiting_for_input = false
+		t.rec_start = 0
+		t.loop_len = 0
+		t.muted = false
+		sc.level(i, t.level)
+		-- reset position
+		sc.position(i, t.buf_start)
+		sc.loop_start(i, t.buf_start)
+		sc.loop_end(i, t.buf_start + 60)
+	end
+	redraw()
+end
+
 function key(n, z)
+	-- track k1 state
+	if n == 1 then
+		k1_held = (z == 1)
+		return
+	end
+
 	if z == 0 then
 		return
 	end
+
+	-- k1 + k3: clear all buffers
+	if n == 3 and k1_held then
+		clear_all_buffers()
+		return
+	end
+
 	local t = tracks[current_track]
 	local v = current_track
 
