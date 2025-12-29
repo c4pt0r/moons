@@ -38,7 +38,7 @@ function init()
 	-- set defaults and load saved parameters
 	params:read()
 
-	local buf_len = 60 * 5
+	local buf_len = 60
 
 	for i = 1, VOICES do
 		tracks[i] = {
@@ -170,36 +170,41 @@ function redraw()
 	screen.clear()
 
 	for i = 1, VOICES do
-		local y = 10 + i * 12
+		-- scroll effect: calculate y position relative to current track
+		local offset = i - current_track
+		local y = 32 + offset * 10
 		local t = tracks[i]
 
-		if i == current_track then
-			screen.level(15)
-		else
-			screen.level(5)
-		end
-
-		screen.move(5, y)
-		if i == current_track then
-			screen.text(">")
-		end
-
-		screen.move(15, y)
-		if t.recording then
-			screen.text("track " .. i .. " : RECORDING...")
-		elseif t.waiting_for_input then
-			screen.text("track " .. i .. " : WAITING...")
-		elseif t.loop_len > 0 then
-			if t.muted then
-				screen.text(string.format("track %d : MUTE (%.2f)", i, t.level))
+		-- only draw tracks that are visible on screen
+		if y >= 10 and y <= 60 then
+			if i == current_track then
+				screen.level(15)
 			else
-				screen.text(string.format("track %d : %.2f", i, t.level))
+				screen.level(5)
 			end
-		else
-			if t.muted then
-				screen.text("track " .. i .. " : MUTE")
+
+			screen.move(5, y)
+			if i == current_track then
+				screen.text(">")
+			end
+
+			screen.move(15, y)
+			if t.recording then
+				screen.text("track " .. i .. " : RECORDING...")
+			elseif t.waiting_for_input then
+				screen.text("track " .. i .. " : WAITING...")
+			elseif t.loop_len > 0 then
+				if t.muted then
+					screen.text(string.format("track %d : MUTE (%.2f)", i, t.level))
+				else
+					screen.text(string.format("track %d : %.2f", i, t.level))
+				end
 			else
-				screen.text("track " .. i .. " : empty")
+				if t.muted then
+					screen.text("track " .. i .. " : MUTE")
+				else
+					screen.text("track " .. i .. " : empty")
+				end
 			end
 		end
 	end
