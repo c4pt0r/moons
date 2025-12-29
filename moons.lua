@@ -25,15 +25,17 @@ function init()
 	params:add_option("rec_mode", "Rec Mode", rec_modes, 1)
 	params:set_action("rec_mode", function(val)
 		rec_mode = val
+		params:write()
 		redraw()
 	end)
 
 	params:add_number("input_threshold", "Input Threshold", 0, 100, 2)
 	params:set_action("input_threshold", function(val)
 		input_threshold = val / 100
+		params:write()
 	end)
 
-	-- load saved parameters
+	-- set defaults and load saved parameters
 	params:read()
 
 	local buf_len = 60 * 5
@@ -79,10 +81,7 @@ function init()
 	input_poll:start()
 end
 
-function cleanup()
-	-- save parameters on exit
-	params:write()
-end
+function cleanup() end
 
 function start_actual_recording(v)
 	local t = tracks[v]
